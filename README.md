@@ -5,8 +5,7 @@
 ```
 /home/c0a22166/teian
 ├── log_test.py
-├── log_test.cxv
-├── log_test2.py
+├── log_syuukei.cxv
 ```
 
 ## 実行する環境
