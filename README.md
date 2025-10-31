@@ -20,26 +20,15 @@
   
 **使い方**:
 
-<img width="844" height="223" alt="image" src="https://github.com/user-attachments/assets/33cb16a4-d47e-43e6-85fa-806dd9c3c5d9" />
+<img width="851" height="185" alt="image" src="https://github.com/user-attachments/assets/3e8a29e6-10a6-4e9e-bcbe-a47dd250ff16" />
+
 
 
 
 **実行結果**
 log_test.csvにコンテナ名別に1分ごとのログ件数が集計される
 
-<img width="761" height="528" alt="image" src="https://github.com/user-attachments/assets/58b77f82-5a22-46ec-baf7-a6774a3a6e8b" />
-
-### log_test2.py
-**説明**:このファイルを動かすことで、log_test.csvの結果から30分ごとのログ件数の中央値を求め、最新の時間帯のログ件数と比較を行います。最新のログ件数が中央値より多く、差が1000件以上の場合に異常のある（障害に関連する）コンテナ名を出力します。
-
-**使い方**:
-
-<img width="765" height="216" alt="image" src="https://github.com/user-attachments/assets/90c60c4a-3904-41e8-bbb8-f8284849024e" />
-
-**実行結果**
-
-<img width="761" height="866" alt="image" src="https://github.com/user-attachments/assets/f6e8c7a8-7bc3-4253-b14e-d266721c88b1" />
-
+<img width="628" height="406" alt="image" src="https://github.com/user-attachments/assets/d90d6034-998a-4428-8a8b-5f020f70fe36" />
 
 
 **注意**
@@ -56,17 +45,17 @@ source venv/bin/activate
 # elasticsearchパッケージのインストール
 pip install elasticsearch
 ```
-- 集計したいログのindexを変更するには、log_summary.pyの以下の部分を変更してください。（log_summary.pyの14行目）
+- 集計したいログのindexを変更するには、log_syukei.pyの以下の部分を変更してください。（log_syukei.pyの19行目）
   - 'beats-*'の部分を変更することで集計するindexを変更することができます。
 ```
 ES_INDEX_PATTERN = 'beats-*'
 ```
-- 集計の期間を変更するには、log_summary.pyの以下の部分を変更してください。（log_summary.pyの22行目）
+- 集計の期間を変更するには、log_syukei.pyの以下の部分を変更してください。（log_syukei.pyの100行目）
   - ()の中をweek=1にすることで1週間、minutes=30にすることで30分間というように変更できます。
 ```
-start_time = end_time - timedelta(hours=1)
+start_time = end_time - timedelta(hours=24)
 ```
-- 集計の頻度を変更するには、log_summary.pyの以下の部分を変更してください。（log_summary.pyの88、89行目）
+- 集計の頻度を変更するには、log_syukei.pyの以下の部分を変更してください。（log_syukei.pyの120、121行目）
   - minute = timestamp.minuteの状態だと1分ごと集計されます。
   - minute = (timestamp.minute // 15) * 15にすることで15分ごとに集計されます。
   - hour = (timestamp.hour // 2) * 2にすることで2時間ごとに集計されます。
