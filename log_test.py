@@ -5,6 +5,7 @@ import os
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 import pytz
+import sys
 
 # Elasticsearch接続設定
 # 🚨 IPアドレスとポートはあなたの環境に合わせてください
@@ -66,7 +67,7 @@ def get_logs_from_elasticsearch(start_time, end_time):
                          ):
             source = hit['_source']
             
-            # 修正: 'kubernetes.container.name' フィールドを取得するように変更
+            # 'kubernetes.container.name' フィールドを取得
             container_name = source.get('kubernetes', {}).get('container', {}).get('name')
             timestamp = source.get('@timestamp')
             
@@ -77,7 +78,7 @@ def get_logs_from_elasticsearch(start_time, end_time):
                     '@timestamp': timestamp
                 })
     except Exception as e:
-        print(f"❌ Elasticsearchからのログ取得中にエラーが発生しました: {e}")
+        print(f"❌ Elasticsearchからのログ取得中にエラーが発生しました: {e}", file=sys.stderr)
         return []
 
     print(f"✅ {len(logs)} 件のログを取得しました。")
@@ -87,20 +88,20 @@ if __name__ == "__main__":
     counter = defaultdict(int)
 
     # ユーザーに入力を求める
-    end_input_str = input("終了時刻を入力してください（例: 2025年9月4日14:00）: ")
+    end_input_str = input("終了時刻を入力してください（例: 20250904-1400）: ")
 
     try:
-        # 'YYYY年MM月DD日HH:MM' 形式で入力された時刻をパースしてナイーブなdatetimeオブジェクトを作成
-        end_time_naive = datetime.strptime(end_input_str, '%Y年%m月%d日%H:%M')
+        # 'YYYYMMDD-HH:MM' 形式で入力された時刻をパースしてナイーブなdatetimeオブジェクトを作成
+        end_time_naive = datetime.strptime(end_input_str, '%Y%m%d-%H%M')
         # ナイーブなdatetimeオブジェクトにJSTタイムゾーンを明示的に付与
         end_time_jst = JST.localize(end_time_naive)
         
-        # 終了時刻から6時間前の時間を開始時刻として計算
-        start_time_jst = end_time_jst - timedelta(hours=6)
+        # 終了時刻から24時間前の時間を開始時刻として計算 (元のコードのまま)
+        start_time_jst = end_time_jst - timedelta(hours=24)
         print(f"✅ ログ検索期間: {start_time_jst.strftime('%Y-%m-%d %H:%M:%S')} から {end_time_jst.strftime('%Y-%m-%d %H:%M:%S')}")
     except ValueError:
-        print("❌ 入力された時刻の形式が正しくありません。'YYYY年MM月DD日HH:MM'の形式で入力してください。")
-        exit()
+        print("❌ 入力された時刻の形式が正しくありません。'YYYYMMDD-HHMM'の形式で入力してください。", file=sys.stderr)
+        sys.exit(1)
 
     log_entries = get_logs_from_elasticsearch(start_time_jst, end_time_jst)
 
@@ -115,15 +116,15 @@ if __name__ == "__main__":
             timestamp_utc = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00')).astimezone(pytz.utc)
             timestamp_jst = timestamp_utc.astimezone(JST)
 
-            # 30分単位に切り捨て
-            minute = (timestamp_jst.minute // 30) * 30
+            # 1分単位に切り捨て (元のコードのロジックを維持)
+            minute = (timestamp_jst.minute // 1) * 1
             rounded_time_jst = timestamp_jst.replace(minute=minute, second=0, microsecond=0)
 
             key = f"{rounded_time_jst.strftime('%Y-%m-%d %H:%M')} {container_name}"
             counter[key] += 1
 
         except ValueError as e:
-            print(f"エラー: タイムスタンプのパースに失敗しました - {e} → {timestamp_str}")
+            print(f"エラー: タイムスタンプのパースに失敗しました - {e} → {timestamp_str}", file=sys.stderr)
             continue
 
     last_interval_counts = {}
